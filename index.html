@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <title>Simple Chat App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            /* height: 100%;
+            width: 100%; */
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: "Raleway", sans-serif;
+            font-optical-sizing: auto;
+            /* font-weight: <weight>; */
+            font-style: normal;
+        }
+
+        #chat-window {
+            width: 90%;
+            height: 90vh;
+            /* border: 1px solid #ccc; */
+            padding-top: 10px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            margin-bottom: 10px;
+        }
+
+        #message-input {
+            width: 70%;
+            padding: 10px;
+            border: none;
+            outline: none;
+            border-radius: 20px;
+            /* background-color: #888; */
+            font-size: 20px;
+            background: #ffffff;
+            box-shadow: 12px 12px 24px #dedede,
+                -12px -12px 24px #ffffff;
+        }
+
+        #send-btn {
+            width: 15%;
+            outline: none;
+            border: none;
+            border-radius: 26px;
+            background: linear-gradient(145deg, #9aff9a, #82d682);
+            box-shadow: 7px 7px 14px #558c55,
+                -7px -7px 14px #cbffcb;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: 10px;
+            /* background: #000; */
+
+
+        }
+
+        .message {
+            width: 95%;
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+            position: relative;
+            font-size: 20px;
+        }
+
+        .sent {
+            background-color: #eff5f21f;
+            text-align: right;
+            padding-bottom: 20px;
+        }
+
+        .received {
+            background-color: #f2d7f871;
+            text-align: left;
+        }
+
+        .seen-status {
+            font-size: 12px;
+            color: #888;
+            position: absolute;
+            bottom: 2px;
+            right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="chat-window"></div>
+    <div id="input-area">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-btn">➤</button>
+    </div>
+
+    <!-- Include Firebase via CDN -->
+    <script type="module">
+        // Import the functions you need from the SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, update, ref, push, set, onChildAdded, onChildChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCW_Jjji4nBcaQq1dIgYzF2Wb9dgEEeWGE",
+            authDomain: "chat-2cbb0.firebaseapp.com",
+            databaseURL: "https://chat-2cbb0-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-2cbb0",
+            storageBucket: "chat-2cbb0.appspot.com",
+            messagingSenderId: "45825403597",
+            appId: "1:45825403597:web:f7a44d1dad310d0e379784",
+            measurementId: "G-FT85PHDZHC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const chatWindow = document.getElementById('chat-window');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        let userId = localStorage.getItem('userId'); // Try to get userId from local storage
+
+        // Prompt for user ID if not present in local storage
+        if (!userId) {
+            userId = prompt("Please enter your User ID:");
+            if (userId) {
+                localStorage.setItem('userId', userId); // Store userId in local storage
+            } else {
+                alert("User ID is required to use the chat app.");
+                // Optionally, you could reload or disable the chat functionality here
+                throw new Error("User ID is required.");
+            }
+        }
+
+        const chatRef = ref(database, 'chat/');
+
+        // Listen for new messages
+        onChildAdded(chatRef, (snapshot) => {
+            const message = snapshot.val();
+            displayMessage(snapshot.key, message, message.userId === userId);
+            markMessageAsSeen(snapshot.key, message.userId);
+        });
+
+        // Send message on button click
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                const newMessageRef = push(chatRef);
+                set(newMessageRef, {
+                    userId: userId,
+                    text: text,
+                    timestamp: Date.now(),
+                    seen: false
+                }).then(() => {
+                    console.log("Message added");
+                }).catch((error) => {
+                    console.log(`Error sending message: ${error}`);
+                });
+                messageInput.value = '';
+            }
+        }
+
+        function displayMessage(messageId, message, isSent) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            messageDiv.setAttribute('data-id', messageId);
+            messageDiv.innerHTML = `<p>${message.text}</p>`;
+            if (isSent && message.seen) {
+                const seenStatus = document.createElement('span');
+                seenStatus.className = 'seen-status';
+                seenStatus.textContent = 'Seen';
+                messageDiv.appendChild(seenStatus);
+            }
+            chatWindow.appendChild(messageDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function markMessageAsSeen(messageId, messageUserId) {
+            if (messageUserId !== userId) {  // Ensure it's not your own message
+                const messageRef = ref(database, `chat/${messageId}`);
+                update(messageRef, { seen: true });
+            }
+        }
+
+        // Listen for changes in 'seen' status
+        onChildChanged(chatRef, (snapshot) => {
+            const message = snapshot.val();
+            if (message.userId === userId && message.seen) {
+                updateSeenStatus(snapshot.key);
+            }
+        });
+
+        function updateSeenStatus(messageId) {
+            const messageDiv = chatWindow.querySelector(`.message[data-id="${messageId}"]`);
+            if (messageDiv) {
+                let seenStatus = messageDiv.querySelector('.seen-status');
+                if (!seenStatus) {
+                    seenStatus = document.createElement('span');
+                    seenStatus.className = 'seen-status';
+                    seenStatus.textContent = 'Seen';
+                    messageDiv.appendChild(seenStatus);
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>
