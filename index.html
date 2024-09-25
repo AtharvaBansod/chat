@@ -151,14 +151,21 @@
         let userId = localStorage.getItem('userId'); // Try to get userId from local storage
 
         // Prompt for user ID if not present in local storage
-        if (!userId) {
-            userId = prompt("Plzzz Enter Your Name:");
+        while (!userId) {
+            userId = prompt("Plzz Enter Your Name:");
+
             if (userId) {
                 localStorage.setItem('userId', userId); // Store userId in local storage
             } else {
                 alert("User ID is required to use the chat app.");
                 // Optionally, you could reload or disable the chat functionality here
                 throw new Error("User ID is required.");
+            }
+            if(userId == "atharva" || userId == "pranoti"){
+                break
+            }
+            else{
+                userId=null;
             }
         }
 
