@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="logo.png" type="image/x-icon"> 
+    <link rel="icon" href="logo.png" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/png" sizes="512x512" href="logo.png"> <!-- Large Android Icon -->
-    <link rel="manifest" href="manifest.json"> 
+    <link rel="manifest" href="manifest.json">
     <title>HeYY</title>
     <style>
         * {
@@ -40,7 +40,10 @@
             overflow-y: scroll;
             overflow-x: hidden;
             margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
         }
+
         #chat-window::-webkit-scrollbar {
             display: none;
             /* Hide the scrollbar */
@@ -85,23 +88,32 @@
         }
 
         .message {
-            width: 95%;
+            width: auto;
+            /* Change width to auto */
+            max-width: 95%;
+            /* Limit the maximum width */
             margin: 5px 0;
-            padding: 5px;
-            border-radius: 5px;
+            padding: 10px;
+            /* Add padding for better readability */
+            border-radius: 20px;
+            /* Make corners more rounded */
             position: relative;
             font-size: 20px;
+            display: inline-block;
         }
 
         .sent {
             background-color: #eff5f27e;
             text-align: right;
+            align-self: flex-end;
             padding-bottom: 20px;
         }
 
         .received {
             background-color: #f2d7f871;
             text-align: left;
+            align-self: flex-start;
+            padding-bottom: 20px;
         }
 
         .seen-status {
@@ -161,11 +173,11 @@
                 // Optionally, you could reload or disable the chat functionality here
                 throw new Error("User ID is required.");
             }
-            if(userId == "atharva" || userId == "pranoti"){
+            if (userId == "atharva" || userId == "pranoti") {
                 break
             }
-            else{
-                userId=null;
+            else {
+                userId = null;
             }
         }
 
